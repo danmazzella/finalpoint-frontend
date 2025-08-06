@@ -2,12 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { leaguesAPI, League } from '@/lib/api';
+import { leaguesAPI, authAPI, League } from '@/lib/api';
 import Link from 'next/link';
+
+interface UserStats {
+  totalPicks: number;
+  correctPicks: number;
+  totalPoints: number;
+  averagePoints: number;
+  accuracy: number;
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalPicks: 0,
+    correctPicks: 0,
+    totalPoints: 0,
+    averagePoints: 0,
+    accuracy: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,12 +32,20 @@ export default function DashboardPage() {
   const loadLeagues = async () => {
     try {
       setLoading(true);
-      const response = await leaguesAPI.getLeagues();
-      if (response.data.success) {
-        setLeagues(response.data.data);
+      const [leaguesResponse, statsResponse] = await Promise.all([
+        leaguesAPI.getLeagues(),
+        authAPI.getUserStats()
+      ]);
+
+      if (leaguesResponse.data.success) {
+        setLeagues(leaguesResponse.data.data);
+      }
+
+      if (statsResponse.data.success) {
+        setUserStats(statsResponse.data.data);
       }
     } catch (error) {
-      console.error('Error loading leagues:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -95,7 +118,7 @@ export default function DashboardPage() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Picks Made</dt>
-                    <dd className="text-lg font-medium text-gray-900">0</dd>
+                    <dd className="text-lg font-medium text-gray-900">{userStats.totalPicks}</dd>
                   </dl>
                 </div>
               </div>
@@ -115,7 +138,7 @@ export default function DashboardPage() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Points Earned</dt>
-                    <dd className="text-lg font-medium text-gray-900">0</dd>
+                    <dd className="text-lg font-medium text-gray-900">{userStats.totalPoints}</dd>
                   </dl>
                 </div>
               </div>
@@ -145,12 +168,20 @@ export default function DashboardPage() {
               <h3 className="mt-2 text-sm font-medium text-gray-900">No leagues</h3>
               <p className="mt-1 text-sm text-gray-500">Get started by creating or joining a league.</p>
               <div className="mt-6">
-                <Link
-                  href="/leagues"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
-                >
-                  Create League
-                </Link>
+                <div className="flex space-x-2">
+                  <Link
+                    href="/join"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Join League
+                  </Link>
+                  <Link
+                    href="/leagues"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
+                  >
+                    Create League
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (

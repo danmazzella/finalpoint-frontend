@@ -9,6 +9,8 @@ export default function ProfilePage() {
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
       logout();
+      // Redirect to login page after logout
+      window.location.href = '/login';
     }
   };
 

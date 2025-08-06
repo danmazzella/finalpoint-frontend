@@ -75,6 +75,12 @@ export default function LeaguesPage() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/join"
+                className="text-gray-600 hover:text-gray-700 font-medium"
+              >
+                Join League
+              </Link>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"

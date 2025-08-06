@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { picksAPI, driversAPI, leaguesAPI, f1racesAPI, Driver, League } from '@/lib/api';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 export default function PicksPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const searchParams = useSearchParams();
   const leagueId = searchParams.get('league');
-  
+
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string>(leagueId || '');
@@ -54,7 +56,7 @@ export default function PicksPage() {
 
   const loadExistingPick = async () => {
     if (!selectedLeague || !currentRace) return;
-    
+
     try {
       const response = await picksAPI.getUserPicks(parseInt(selectedLeague));
       if (response.data.success) {
@@ -77,7 +79,7 @@ export default function PicksPage() {
 
   const makePick = async (driverId: number) => {
     if (!selectedLeague) {
-      alert('Please select a league first');
+      showToast('Please select a league first', 'error');
       return;
     }
 
@@ -86,13 +88,13 @@ export default function PicksPage() {
       const response = await picksAPI.makePick(parseInt(selectedLeague), currentWeek, driverId);
       if (response.data.success) {
         setSelectedDriver(driverId);
-        alert('Pick submitted successfully!');
+        showToast('Pick submitted successfully!', 'success');
         // Refresh the pick display
         await loadExistingPick();
       }
     } catch (error: any) {
       console.error('Error making pick:', error);
-      alert(error.response?.data?.message || 'Failed to submit pick. Please try again.');
+      showToast(error.response?.data?.message || 'Failed to submit pick. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -131,7 +133,20 @@ export default function PicksPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* League Selection */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Select League</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Select League</h2>
+            {selectedLeague && (
+              <Link
+                href={`/leagues/${selectedLeague}`}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              >
+                <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to League
+              </Link>
+            )}
+          </div>
           <select
             value={selectedLeague}
             onChange={(e) => setSelectedLeague(e.target.value)}
@@ -222,11 +237,10 @@ export default function PicksPage() {
                     key={driver.id}
                     onClick={() => makePick(driver.id)}
                     disabled={submitting}
-                    className={`p-4 border rounded-lg text-left transition-colors ${
-                      selectedDriver === driver.id
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-300 hover:bg-gray-50'
-                    } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`p-4 border rounded-lg text-left transition-colors ${selectedDriver === driver.id
+                      ? 'border-pink-500 bg-pink-50'
+                      : 'border-gray-200 hover:border-pink-300 hover:bg-gray-50'
+                      } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-500">#{driver.driverNumber}</span>
