@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import {
@@ -25,7 +25,7 @@ interface CurrentRace {
     country: string;
 }
 
-export default function PicksV2Page() {
+function PicksV2Form() {
     const { user } = useAuth();
     const { showToast } = useToast();
     const searchParams = useSearchParams();
@@ -584,5 +584,22 @@ export default function PicksV2Page() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function PicksV2Page() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading picks...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <PicksV2Form />
+        </Suspense>
     );
 }
