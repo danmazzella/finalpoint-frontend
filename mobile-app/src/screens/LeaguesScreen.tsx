@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  Linking,
 } from 'react-native';
 import { leaguesAPI } from '../services/apiService';
 
@@ -18,9 +19,11 @@ interface League {
   ownerId: number;
   seasonYear: number;
   memberCount?: number;
+  joinCode?: string;
+  isMember?: boolean;
 }
 
-const LeaguesScreen = () => {
+const LeaguesScreen = ({ navigation }: any) => {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -63,6 +66,30 @@ const LeaguesScreen = () => {
     }
   };
 
+  const shareLeague = (league: League) => {
+    if (league.joinCode) {
+      const shareUrl = `https://yourapp.com/joinleague/${league.joinCode}`;
+      Alert.alert(
+        'Share League',
+        `Share this link with friends to invite them to join ${league.name}:`,
+        [
+          {
+            text: 'Copy Link', onPress: () => {
+              // In a real app, you'd use Clipboard API
+              Alert.alert('Link copied to clipboard!');
+            }
+          },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+    }
+  };
+
+  const navigateToLeagueDetail = (league: League) => {
+    // Navigate to league detail screen
+    navigation.navigate('LeagueDetail', { leagueId: league.id });
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -75,7 +102,7 @@ const LeaguesScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>My Leagues</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.createButton}
           onPress={() => setModalVisible(true)}
         >
@@ -93,21 +120,40 @@ const LeaguesScreen = () => {
           </View>
         ) : (
           leagues.map((league) => (
-            <TouchableOpacity key={league.id} style={styles.leagueCard}>
+            <TouchableOpacity
+              key={league.id}
+              style={styles.leagueCard}
+              onPress={() => navigateToLeagueDetail(league)}
+            >
               <View style={styles.leagueInfo}>
                 <Text style={styles.leagueName}>{league.name}</Text>
                 <Text style={styles.leagueDetails}>
                   Season {league.seasonYear} • {league.memberCount || 1} member{league.memberCount !== 1 ? 's' : ''}
                 </Text>
+                {league.isMember ? (
+                  <View style={styles.memberBadge}>
+                    <Text style={styles.memberBadgeText}>Member</Text>
+                  </View>
+                ) : (
+                  <View style={styles.joinBadge}>
+                    <Text style={styles.joinBadgeText}>Join</Text>
+                  </View>
+                )}
               </View>
-              <TouchableOpacity style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>View</Text>
-              </TouchableOpacity>
+              <View style={styles.leagueActions}>
+                <TouchableOpacity
+                  style={styles.shareButton}
+                  onPress={() => shareLeague(league)}
+                >
+                  <Text style={styles.shareButtonText}>Share</Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           ))
         )}
       </ScrollView>
 
+      {/* Create League Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -119,26 +165,23 @@ const LeaguesScreen = () => {
             <Text style={styles.modalTitle}>Create New League</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="League Name"
+              placeholder="Enter league name"
               value={newLeagueName}
               onChangeText={setNewLeagueName}
               autoFocus
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => {
-                  setModalVisible(false);
-                  setNewLeagueName('');
-                }}
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.modalButtonCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.confirmButton}
+              <TouchableOpacity
+                style={styles.modalButtonCreate}
                 onPress={createLeague}
               >
-                <Text style={styles.confirmButtonText}>Create</Text>
+                <Text style={styles.modalButtonCreateText}>Create</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -231,14 +274,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  viewButton: {
-    backgroundColor: '#e91e63',
+  memberBadge: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  memberBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  joinBadge: {
+    backgroundColor: '#FF9800',
+    borderRadius: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  joinBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  leagueActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareButton: {
+    backgroundColor: '#e0e0e0',
     borderRadius: 6,
     padding: 8,
     paddingHorizontal: 12,
   },
-  viewButtonText: {
-    color: 'white',
+  shareButtonText: {
+    color: '#333',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -274,7 +347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  cancelButton: {
+  modalButtonCancel: {
     flex: 1,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
@@ -282,12 +355,12 @@ const styles = StyleSheet.create({
     marginRight: 10,
     alignItems: 'center',
   },
-  cancelButtonText: {
+  modalButtonCancelText: {
     color: '#666',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  confirmButton: {
+  modalButtonCreate: {
     flex: 1,
     backgroundColor: '#e91e63',
     borderRadius: 8,
@@ -295,7 +368,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     alignItems: 'center',
   },
-  confirmButtonText: {
+  modalButtonCreateText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

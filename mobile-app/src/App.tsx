@@ -12,6 +12,8 @@ import HomeScreen from './screens/HomeScreen';
 import LeaguesScreen from './screens/LeaguesScreen';
 import PicksScreen from './screens/PicksScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import LeagueDetailScreen from './screens/LeagueDetailScreen';
+import RaceResultsScreen from './screens/RaceResultsScreen';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -39,29 +41,29 @@ const MainTabs = () => {
           },
         }),
       }}>
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeScreen}
         options={{
           title: 'Dashboard',
         }}
       />
-      <Tab.Screen 
-        name="Leagues" 
+      <Tab.Screen
+        name="Leagues"
         component={LeaguesScreen}
         options={{
           title: 'My Leagues',
         }}
       />
-      <Tab.Screen 
-        name="Picks" 
+      <Tab.Screen
+        name="Picks"
         component={PicksScreen}
         options={{
           title: 'My Picks',
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           title: 'Profile',
@@ -83,6 +85,8 @@ const App = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="LeagueDetail" component={LeagueDetailScreen} />
+            <Stack.Screen name="RaceResults" component={RaceResultsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>

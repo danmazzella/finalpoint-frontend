@@ -43,9 +43,9 @@ apiService.interceptors.response.use(
 
 // API methods
 export const authAPI = {
-  login: (email: string, password: string) => 
+  login: (email: string, password: string) =>
     apiService.post('/users/login', { email, password }),
-  signup: (email: string, password: string, name: string) => 
+  signup: (email: string, password: string, name: string) =>
     apiService.post('/users/signup', { email, password, name }),
 };
 
@@ -54,16 +54,30 @@ export const leaguesAPI = {
   createLeague: (name: string) => apiService.post('/leagues', { name }),
   getLeague: (id: number) => apiService.get(`/leagues/${id}`),
   joinLeague: (leagueId: number) => apiService.post(`/leagues/${leagueId}/join`),
+  getLeagueMembers: (leagueId: number) => apiService.get(`/leagues/${leagueId}/members`),
+  getLeagueStandings: (leagueId: number) => apiService.get(`/leagues/${leagueId}/standings`),
+  getLeagueStats: (leagueId: number) => apiService.get(`/leagues/${leagueId}/stats`),
+  getLeagueByCode: (joinCode: string) => apiService.get(`/leagues/code/${joinCode}`),
+  joinByCode: (joinCode: string) => apiService.post(`/leagues/join/${joinCode}`),
 };
 
 export const picksAPI = {
-  makePick: (leagueId: number, weekNumber: number, driverId: number) => 
+  makePick: (leagueId: number, weekNumber: number, driverId: number) =>
     apiService.post('/picks', { leagueId, weekNumber, driverId }),
   getUserPicks: (leagueId: number) => apiService.get(`/picks/user/${leagueId}`),
-  getLeaguePicks: (leagueId: number, weekNumber: number) => 
+  getLeaguePicks: (leagueId: number, weekNumber: number) =>
     apiService.get(`/picks/league/${leagueId}/${weekNumber}`),
+  getRaceResults: (leagueId: number, weekNumber: number) =>
+    apiService.get(`/picks/results/${leagueId}/week/${weekNumber}`),
 };
 
 export const driversAPI = {
   getDrivers: () => apiService.get('/drivers'),
+};
+
+export const f1racesAPI = {
+  getCurrentRace: () => apiService.get('/f1races/current'),
+  getAllRaces: (seasonYear = 2025) => apiService.get(`/f1races/all?seasonYear=${seasonYear}`),
+  getRaceByWeek: (weekNumber: number, seasonYear = 2025) =>
+    apiService.get(`/f1races/week/${weekNumber}?seasonYear=${seasonYear}`),
 }; 
