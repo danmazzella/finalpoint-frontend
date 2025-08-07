@@ -232,7 +232,7 @@ export default function RaceResultsPage() {
     const totalParticipants = results.length;
     const totalPoints = results.reduce((sum, result) => sum + result.totalPoints, 0);
     const totalCorrect = results.reduce((sum, result) => sum + result.totalCorrect, 0);
-    const hasScoredResults = results.some(result => result.picks.some(pick => pick.actualDriverId !== null));
+    const hasScoredResults = results.some(result => result.picks.some(pick => pick.actualDriverName));
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -254,9 +254,9 @@ export default function RaceResultsPage() {
                         </div>
                         <Link
                             href={`/leagues/${leagueId}`}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            className="text-pink-600 hover:text-pink-700 font-medium"
                         >
-                            Back to League
+                            ← Back to League
                         </Link>
                     </div>
                 </div>
@@ -358,7 +358,7 @@ export default function RaceResultsPage() {
                 </div>
 
                 {/* Multiple Position Notice */}
-                {requiredPositions.length > 1 && results.length > 0 && (
+                {requiredPositions.length > 1 && hasScoredResults && (
                     <div className="bg-white shadow rounded-lg p-6 mb-6">
                         <div className="mb-4">
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
