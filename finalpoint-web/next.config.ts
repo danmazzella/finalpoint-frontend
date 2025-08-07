@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     '127.0.0.1',
     '192.168.0.15'
   ],
-  
+
   // Additional security headers
   async headers() {
     return [
@@ -37,20 +37,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   // Environment-specific configuration
   env: {
     CUSTOM_KEY: process.env.NEXT_PUBLIC_API_URL,
   },
-  
+
   // Enable experimental features if needed
   experimental: {
     // Add any experimental features here
   },
-  
-  // Optimize for production
-  swcMinify: true,
-  
+
   // Handle images and static assets
   images: {
     domains: ['finalpoint.app', 'api.finalpoint.app'],
