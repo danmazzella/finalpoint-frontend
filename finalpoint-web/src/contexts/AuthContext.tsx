@@ -1,7 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI, User } from '@/lib/api';
+import { authAPI } from '@/lib/api';
+
+interface User {
+  id: number;
+  email: string;
+  name: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -9,13 +15,15 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (name: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -90,12 +98,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
   };
 
+  const updateProfile = async (name: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const response = await authAPI.updateProfile({ name });
+      if (response.data.success && user) {
+        // Update the user state with the new name
+        const updatedUser = { ...user, name };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const response = await authAPI.changePassword({ currentPassword, newPassword });
+      if (response.data.success) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Change password error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isLoading,
     login,
     signup,
     logout,
+    updateProfile,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

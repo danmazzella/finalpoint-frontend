@@ -27,11 +27,7 @@ export default function LeagueDetailPage() {
   const [activityLoading, setActivityLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [members, setMembers] = useState<any[]>([]);
-  const [standings, setStandings] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
-  const [showMembers, setShowMembers] = useState(false);
-  const [showStandings, setShowStandings] = useState(false);
   const [currentRace, setCurrentRace] = useState<CurrentRace | null>(null);
   const [loadingCurrentRace, setLoadingCurrentRace] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -87,29 +83,9 @@ export default function LeagueDetailPage() {
     }
   };
 
-  const loadLeagueMembers = async (leagueId: number) => {
-    try {
-      const response = await leaguesAPI.getLeagueMembers(leagueId);
-      if (response.data.success) {
-        setMembers(response.data.data);
-      }
-    } catch (error: any) {
-      console.error('Error loading league members:', error);
-      showToast('Failed to load league members', 'error');
-    }
-  };
 
-  const loadLeagueStandings = async (leagueId: number) => {
-    try {
-      const response = await leaguesAPI.getLeagueStandings(leagueId);
-      if (response.data.success) {
-        setStandings(response.data.data);
-      }
-    } catch (error: any) {
-      console.error('Error loading league standings:', error);
-      showToast('Failed to load league standings', 'error');
-    }
-  };
+
+
 
   const loadLeagueStats = async (leagueId: number) => {
     try {
@@ -306,50 +282,13 @@ export default function LeagueDetailPage() {
                     {joining ? 'Joining...' : 'Join League'}
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    if (!showStandings) {
-                      loadLeagueStandings(parseInt(leagueId));
-                    }
-                    setShowStandings(!showStandings);
-                    setShowMembers(false);
-
-                    // Scroll to standings section after a brief delay to allow content to render
-                    if (!showStandings) {
-                      setTimeout(() => {
-                        const standingsElement = document.getElementById('league-standings');
-                        if (standingsElement) {
-                          standingsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
-                    }
-                  }}
+                <Link
+                  href={`/leagues/${leagueId}/standings`}
                   className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  {showStandings ? 'Hide Standings' : 'View Standings'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (!showMembers) {
-                      loadLeagueMembers(parseInt(leagueId));
-                    }
-                    setShowMembers(!showMembers);
-                    setShowStandings(false);
+                  View Standings
+                </Link>
 
-                    // Scroll to members section after a brief delay to allow content to render
-                    if (!showMembers) {
-                      setTimeout(() => {
-                        const membersElement = document.getElementById('league-members');
-                        if (membersElement) {
-                          membersElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
-                    }
-                  }}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  {showMembers ? 'Hide Members' : 'View Members'}
-                </button>
                 <Link
                   href={`/leagues/${leagueId}/results/${currentRace?.weekNumber || 1}`}
                   className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
@@ -579,95 +518,9 @@ export default function LeagueDetailPage() {
               )}
             </div>
 
-            {/* League Members */}
-            {showMembers && (
-              <div id="league-members" className="bg-white shadow rounded-lg p-6 mt-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">League Members</h2>
-                {members.length > 0 ? (
-                  <div className="space-y-3">
-                    {members.map((member, index) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
-                            <span className="text-pink-600 font-medium text-sm">
-                              {member.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${member.role === 'Owner'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-800'
-                            }`}>
-                            {member.role}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {new Date(member.joinedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No members found</h3>
-                    <p className="mt-1 text-sm text-gray-500">Members will appear here once they join the league.</p>
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* League Standings */}
-            {showStandings && (
-              <div id="league-standings" className="bg-white shadow rounded-lg p-6 mt-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">League Standings</h2>
-                {standings.length > 0 ? (
-                  <div className="space-y-3">
-                    {standings.map((player, index) => (
-                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${index === 0 ? 'bg-yellow-100' :
-                            index === 1 ? 'bg-gray-100' :
-                              index === 2 ? 'bg-orange-100' : 'bg-gray-100'
-                            }`}>
-                            <span className={`font-medium text-sm ${index === 0 ? 'text-yellow-600' :
-                              index === 1 ? 'text-gray-600' :
-                                index === 2 ? 'text-orange-600' : 'text-gray-600'
-                              }`}>
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{player.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {player.totalPicks} picks • {player.correctPicks} correct
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">{player.totalPoints} pts</p>
-                          <p className="text-xs text-gray-500">{player.accuracy}% accuracy</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No standings available</h3>
-                    <p className="mt-1 text-sm text-gray-500">Standings will appear here once picks are made.</p>
-                  </div>
-                )}
-              </div>
-            )}
+
+
           </div>
         </div>
       </main>
