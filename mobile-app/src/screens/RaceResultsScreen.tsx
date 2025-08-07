@@ -85,13 +85,15 @@ const RaceResultsScreen = ({ route, navigation }: any) => {
         navigation.setParams({ weekNumber: week });
     };
 
-    const getPositionDifferenceText = (difference: number) => {
+    const getPositionDifferenceText = (difference: number | null) => {
+        if (difference === null) return 'No pick made';
         if (difference === 0) return 'Correct!';
         if (difference === 1) return '1 position off';
         return `${difference} positions off`;
     };
 
-    const getPositionDifferenceColor = (difference: number) => {
+    const getPositionDifferenceColor = (difference: number | null) => {
+        if (difference === null) return '#9CA3AF';
         if (difference === 0) return '#4CAF50';
         if (difference <= 2) return '#FF9800';
         if (difference <= 5) return '#FF5722';

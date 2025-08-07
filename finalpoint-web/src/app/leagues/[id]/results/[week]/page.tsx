@@ -17,7 +17,7 @@ interface RaceResult {
     actualP10DriverId: number;
     actualP10DriverName: string;
     actualP10DriverTeam: string;
-    positionDifference: number;
+    positionDifference: number | null;
     isCorrect: boolean;
     points: number;
 }
@@ -147,13 +147,15 @@ export default function RaceResultsPage() {
         }
     };
 
-    const getPositionDifferenceText = (difference: number) => {
+    const getPositionDifferenceText = (difference: number | null) => {
+        if (difference === null) return 'No pick made';
         if (difference === 0) return 'Correct!';
         if (difference === 1) return '1 position off';
         return `${difference} positions off`;
     };
 
-    const getPositionDifferenceColor = (difference: number) => {
+    const getPositionDifferenceColor = (difference: number | null) => {
+        if (difference === null) return 'text-gray-400 bg-gray-100';
         if (difference === 0) return 'text-green-600 bg-green-100';
         if (difference <= 2) return 'text-yellow-600 bg-yellow-100';
         if (difference <= 5) return 'text-orange-600 bg-orange-100';
