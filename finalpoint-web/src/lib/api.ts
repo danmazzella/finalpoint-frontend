@@ -6,7 +6,7 @@ const getApiBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  
+
   // Check if we're in production (deployed to finalpoint.app)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
       return 'https://api.finalpoint.app/api';
     }
   }
-  
+
   // Fallback to development URL
   return 'http://192.168.0.15:6075/api';
 };
