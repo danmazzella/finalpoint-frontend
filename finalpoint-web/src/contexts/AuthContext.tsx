@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login({ email, password });
 
       if (response.data.success) {
         const userData = response.data.user;
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const response = await authAPI.signup(email, password, name);
+      const response = await authAPI.signup({ email, password, name });
 
       if (response.data.success) {
         const userData = response.data.user;

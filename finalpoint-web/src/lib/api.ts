@@ -46,13 +46,16 @@ apiService.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-    
+
     // Add cache-busting headers
     config.headers['Cache-Control'] = 'no-cache';
     config.headers['Pragma'] = 'no-cache';
-    
+
     console.log('🔧 Making request to:', config.url);
     console.log('🔧 Full URL:', (config.baseURL || '') + (config.url || ''));
+    console.log('🔧 Request method:', config.method);
+    console.log('🔧 Request headers:', config.headers);
+    console.log('🔧 Request data:', config.data);
     return config;
   },
   (error) => {
@@ -78,9 +81,9 @@ apiService.interceptors.response.use(
       isTimeout: error?.code === 'ECONNABORTED',
       isCorsError: error?.message?.includes('CORS') || false
     };
-    
+
     console.error('🔧 API Error Details:', errorInfo);
-    
+
     // Handle specific error types
     if (errorInfo.isNetworkError) {
       console.error('🔧 Network error - check if API is accessible');
@@ -94,7 +97,7 @@ apiService.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    
+
     return Promise.reject(error);
   }
 );
