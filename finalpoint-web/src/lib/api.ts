@@ -30,6 +30,8 @@ export const apiService = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
   },
   // Add timeout for better error handling
   timeout: 10000,
@@ -44,7 +46,13 @@ apiService.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    
+    // Add cache-busting headers
+    config.headers['Cache-Control'] = 'no-cache';
+    config.headers['Pragma'] = 'no-cache';
+    
     console.log('🔧 Making request to:', config.url);
+    console.log('🔧 Full URL:', (config.baseURL || '') + (config.url || ''));
     return config;
   },
   (error) => {
@@ -65,16 +73,18 @@ apiService.interceptors.response.use(
       data: error?.response?.data || 'No data',
       url: error?.config?.url || 'No URL',
       method: error?.config?.method || 'No method',
+      fullUrl: (error?.config?.baseURL || '') + (error?.config?.url || '') || 'No full URL',
       isNetworkError: !error?.response,
       isTimeout: error?.code === 'ECONNABORTED',
       isCorsError: error?.message?.includes('CORS') || false
     };
-
+    
     console.error('🔧 API Error Details:', errorInfo);
-
+    
     // Handle specific error types
     if (errorInfo.isNetworkError) {
       console.error('🔧 Network error - check if API is accessible');
+      console.error('🔧 Full URL attempted:', errorInfo.fullUrl);
     } else if (errorInfo.isTimeout) {
       console.error('🔧 Request timed out');
     } else if (errorInfo.isCorsError) {
@@ -84,7 +94,7 @@ apiService.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-
+    
     return Promise.reject(error);
   }
 );
