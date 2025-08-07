@@ -180,6 +180,20 @@ export const activityAPI = {
     apiService.get(`/activity/league/${leagueId}/recent?limit=${limit}`),
 };
 
+export const notificationsAPI = {
+  getPreferences: () => apiService.get('/notifications/preferences'),
+  updatePreferences: (preferences: NotificationPreferences) =>
+    apiService.put('/notifications/preferences', preferences),
+  registerPushToken: (token: string, platform: 'web' | 'ios' | 'android') =>
+    apiService.post('/notifications/push-token', { token, platform }),
+  unregisterPushToken: (token: string) =>
+    apiService.delete('/notifications/push-token', { data: { token } }),
+  getHistory: (page = 1, limit = 20) =>
+    apiService.get(`/notifications/history?page=${page}&limit=${limit}`),
+  testEmail: () => apiService.post('/notifications/test', { type: 'email' }),
+  testPush: () => apiService.post('/notifications/test', { type: 'push' }),
+};
+
 // Types
 export interface User {
   id: number;
@@ -317,4 +331,11 @@ export interface MemberPicksV2 {
   correctPicks: number;
   totalPicks: number;
   accuracy: string;
+}
+
+export interface NotificationPreferences {
+  emailReminders: boolean;
+  emailScoreUpdates: boolean;
+  pushReminders: boolean;
+  pushScoreUpdates: boolean;
 } 

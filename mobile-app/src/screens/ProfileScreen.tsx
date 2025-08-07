@@ -8,9 +8,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const { user, logout } = useAuth();
+  const navigation = useNavigation();
 
   const handleLogout = () => {
     Alert.alert(
@@ -55,7 +57,10 @@ const ProfileScreen = () => {
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('NotificationSettings')}
+        >
           <Text style={styles.menuItemText}>Notification Settings</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
