@@ -166,7 +166,17 @@ export default function NotificationsPage() {
                 : await notificationsAPI.testPush();
 
             if (response.data.success) {
-                setSuccess(`Test ${type} notification sent successfully!`);
+                if (response.data.developmentMode) {
+                    setSuccess(`Test ${type} notification queued (development mode). Check browser console for details.`);
+                    // Show a console notification for development
+                    console.log(`🔔 Test ${type} notification:`, {
+                        title: 'FinalPoint Test Notification',
+                        body: `This is a test ${type} notification from FinalPoint.`,
+                        timestamp: new Date().toISOString()
+                    });
+                } else {
+                    setSuccess(`Test ${type} notification sent successfully!`);
+                }
             } else {
                 setError(response.data.error || `Failed to send test ${type} notification`);
             }
