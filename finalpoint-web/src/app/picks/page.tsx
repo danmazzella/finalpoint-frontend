@@ -5,12 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { picksAPI, driversAPI, leaguesAPI, f1racesAPI, Driver, League } from '@/lib/api';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function PicksPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const leagueId = searchParams.get('league');
 
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -21,6 +22,8 @@ export default function PicksPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<number | null>(null);
   const [currentRace, setCurrentRace] = useState<any>(null);
+  const [leaguePositions, setLeaguePositions] = useState<number[]>([10]);
+  const [checkingPositions, setCheckingPositions] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -54,6 +57,31 @@ export default function PicksPage() {
     }
   };
 
+  const checkLeaguePositions = async (leagueId: string) => {
+    if (!leagueId) return;
+
+    try {
+      setCheckingPositions(true);
+      const response = await picksAPI.getLeaguePositions(parseInt(leagueId));
+      if (response.data.success) {
+        const positions = response.data.data;
+        setLeaguePositions(positions);
+
+        // If league requires multiple positions, redirect to V2 page
+        if (positions.length > 1 || (positions.length === 1 && positions[0] !== 10)) {
+          router.push(`/picks-v2?league=${leagueId}`);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking league positions:', error);
+      // Default to P10 if there's an error
+      setLeaguePositions([10]);
+    } finally {
+      setCheckingPositions(false);
+    }
+  };
+
   const loadExistingPick = async () => {
     if (!selectedLeague || !currentRace) {
       setSelectedDriver(null);
@@ -82,8 +110,11 @@ export default function PicksPage() {
   // Clear selected driver when league changes
   useEffect(() => {
     setSelectedDriver(null);
-    if (selectedLeague && currentRace) {
-      loadExistingPick();
+    if (selectedLeague) {
+      checkLeaguePositions(selectedLeague);
+      if (currentRace) {
+        loadExistingPick();
+      }
     }
   }, [selectedLeague, currentRace]);
 
@@ -114,7 +145,7 @@ export default function PicksPage() {
     setSelectedDriver(null); // Clear the selected driver immediately
   };
 
-  if (loading) {
+  if (loading || checkingPositions) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-600"></div>

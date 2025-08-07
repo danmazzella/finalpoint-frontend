@@ -47,7 +47,7 @@ const SignupScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join the F1 P10 Prediction League</Text>
+        <Text style={styles.subtitle}>Join the F1 Prediction Game</Text>
       </View>
 
       <View style={styles.form}>

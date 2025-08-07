@@ -44,7 +44,7 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>FinalPoint</Text>
-        <Text style={styles.subtitle}>F1 P10 Prediction League</Text>
+        <Text style={styles.subtitle}>F1 Prediction Game</Text>
       </View>
 
       <View style={styles.form}>

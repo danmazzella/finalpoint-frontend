@@ -163,7 +163,7 @@ export default function LeagueDetailPage() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900">League not found</h1>
-            <p className="text-gray-600 mt-2">The league you're looking for doesn't exist.</p>
+            <p className="text-gray-600 mt-2">The league you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/leagues"
               className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
@@ -392,7 +392,15 @@ export default function LeagueDetailPage() {
 
             {/* Recent Activity */}
             <div className="bg-white shadow rounded-lg p-6 mt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-gray-900">Recent Activity</h2>
+                <Link
+                  href={`/leagues/${leagueId}/activity`}
+                  className="text-sm text-pink-600 hover:text-pink-700 font-medium"
+                >
+                  View All Activity →
+                </Link>
+              </div>
               {activityLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto"></div>
@@ -407,12 +415,14 @@ export default function LeagueDetailPage() {
                         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.activityType === 'pick_created' ? 'bg-green-100' :
                           activity.activityType === 'pick_changed' ? 'bg-blue-100' :
                             activity.activityType === 'user_joined' ? 'bg-purple-100' :
-                              'bg-pink-100'
+                              activity.activityType === 'race_result_processed' ? 'bg-yellow-100' :
+                                'bg-pink-100'
                           }`}>
                           <svg className={`h-4 w-4 ${activity.activityType === 'pick_created' ? 'text-green-600' :
                             activity.activityType === 'pick_changed' ? 'text-blue-600' :
                               activity.activityType === 'user_joined' ? 'text-purple-600' :
-                                'text-pink-600'
+                                activity.activityType === 'race_result_processed' ? 'text-yellow-600' :
+                                  'text-pink-600'
                             }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             {activity.activityType === 'pick_created' ? (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -420,6 +430,8 @@ export default function LeagueDetailPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             ) : activity.activityType === 'user_joined' ? (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                            ) : activity.activityType === 'race_result_processed' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             ) : (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             )}
@@ -430,19 +442,23 @@ export default function LeagueDetailPage() {
                         <p className="text-sm font-medium text-gray-900">
                           {activity.activityType === 'user_joined' ? (
                             `${activity.userName} joined the league`
+                          ) : activity.activityType === 'race_result_processed' ? (
+                            `Race results processed for Week ${activity.weekNumber}`
                           ) : (
-                            `${activity.userName} ${activity.activityType === 'pick_created' ? 'made a pick' : 'changed their pick'} for Week ${activity.weekNumber}`
+                            `${activity.userName || 'System'} ${activity.activityType === 'pick_created' ? 'made a pick' : 'changed their pick'} for Week ${activity.weekNumber}`
                           )}
                         </p>
                         <p className="text-sm text-gray-500">
                           {activity.activityType === 'pick_created' ? (
-                            `Picked ${activity.driverName} (${activity.driverTeam})`
+                            `Picked ${activity.driverName} (${activity.driverTeam}) for P${activity.position}`
                           ) : activity.activityType === 'pick_changed' ? (
-                            `Changed from ${activity.previousDriverName} (${activity.previousDriverTeam}) to ${activity.driverName} (${activity.driverTeam})`
+                            `Changed P${activity.position} from ${activity.previousDriverName} (${activity.previousDriverTeam}) to ${activity.driverName} (${activity.driverTeam})`
+                          ) : activity.activityType === 'race_result_processed' ? (
+                            `${activity.raceName ? `${activity.raceName} - ` : ''}${activity.driverName} (${activity.driverTeam}) finished in P${activity.position}`
                           ) : activity.activityType === 'user_joined' ? (
                             `Welcome to the league!`
                           ) : (
-                            `Picked ${activity.driverName} (${activity.driverTeam})`
+                            `Picked ${activity.driverName} (${activity.driverTeam}) for P${activity.position}`
                           )}
                         </p>
                       </div>

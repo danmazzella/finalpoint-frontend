@@ -123,6 +123,7 @@ export const leaguesAPI = {
 };
 
 export const picksAPI = {
+  // Legacy methods for backward compatibility
   makePick: (leagueId: number, weekNumber: number, driverId: number) =>
     apiService.post('/picks/make', { leagueId, weekNumber, driverId }),
   getUserPicks: (leagueId: number) => apiService.get(`/picks/user/${leagueId}`),
@@ -130,6 +131,28 @@ export const picksAPI = {
     apiService.get(`/picks/league/${leagueId}/week/${weekNumber}`),
   getRaceResults: (leagueId: number, weekNumber: number) =>
     apiService.get(`/picks/results/${leagueId}/week/${weekNumber}`),
+
+  // New V2 methods for multiple position support
+  makePickV2: (leagueId: number, weekNumber: number, picks: PickV2[]) =>
+    apiService.post('/picks/make-v2', { leagueId, weekNumber, picks }),
+  removePickV2: (leagueId: number, weekNumber: number, position: number) =>
+    apiService.post('/picks/remove-v2', { leagueId, weekNumber, position }),
+  getUserPicksV2: (leagueId: number) => apiService.get(`/picks/user/${leagueId}/v2`),
+  getLeaguePicksV2: (leagueId: number, weekNumber: number) =>
+    apiService.get(`/picks/league/${leagueId}/week/${weekNumber}/v2`),
+  getRaceResultsV2: (leagueId: number, weekNumber: number) =>
+    apiService.get(`/picks/results/${leagueId}/week/${weekNumber}/v2`),
+
+  // New V2 result views
+  getResultsByPositionV2: (leagueId: number, weekNumber: number, position: number) =>
+    apiService.get(`/picks/results/${leagueId}/week/${weekNumber}/position/${position}/v2`),
+  getMemberPicksV2: (leagueId: number, weekNumber: number, userId: number) =>
+    apiService.get(`/picks/results/${leagueId}/week/${weekNumber}/member/${userId}/v2`),
+
+  // League position management
+  getLeaguePositions: (leagueId: number) => apiService.get(`/picks/league/${leagueId}/positions`),
+  updateLeaguePositions: (leagueId: number, positions: number[]) =>
+    apiService.put(`/picks/league/${leagueId}/positions`, { positions }),
 };
 
 export const driversAPI = {
@@ -178,6 +201,7 @@ export interface League {
   memberCount?: number;
   isMember?: boolean;
   userRole?: 'Owner' | 'Member';
+  requiredPositions?: number[];
 }
 
 export interface Driver {
@@ -196,4 +220,95 @@ export interface Pick {
   driverName: string;
   isLocked: boolean;
   points: number;
+}
+
+// New types for V2 multiple position support
+export interface PickV2 {
+  position: number;
+  driverId: number;
+}
+
+export interface UserPickV2 {
+  id: number;
+  leagueId: number;
+  userId: number;
+  weekNumber: number;
+  position: number;
+  driverId: number;
+  driverName: string;
+  driverTeam: string;
+  isLocked: boolean;
+  isScored: boolean;
+  points: number;
+}
+
+export interface RaceResultV2 {
+  userId: number;
+  userName: string;
+  picks: {
+    position: number;
+    driverId: number | null;
+    driverName: string | null;
+    driverTeam: string | null;
+    actualDriverId: number;
+    actualDriverName: string;
+    actualDriverTeam: string;
+    positionDifference: number | null;
+    isCorrect: boolean;
+    points: number;
+  }[];
+  totalPoints: number;
+  totalCorrect: number;
+  hasMadeAllPicks: boolean;
+}
+
+// New interfaces for V2 result views
+export interface PositionResultV2 {
+  leagueId: number;
+  weekNumber: number;
+  position: number;
+  picks: {
+    userId: number;
+    userName: string;
+    driverId: number;
+    driverName: string;
+    driverTeam: string;
+    position: number;
+    isCorrect: boolean | null;
+    points: number | null;
+    actualDriverId: number | null;
+    actualDriverName: string | null;
+    actualDriverTeam: string | null;
+    actualFinishPosition: number | null;
+  }[];
+  actualResult: {
+    driverId: number;
+    driverName: string;
+    driverTeam: string;
+  } | null;
+  totalParticipants: number;
+  correctPicks: number;
+}
+
+export interface MemberPicksV2 {
+  leagueId: number;
+  weekNumber: number;
+  userId: number;
+  userName: string;
+  picks: {
+    position: number;
+    driverId: number;
+    driverName: string;
+    driverTeam: string;
+    isCorrect: boolean | null;
+    points: number | null;
+    actualDriverId: number | null;
+    actualDriverName: string | null;
+    actualDriverTeam: string | null;
+    actualFinishPosition: number | null;
+  }[];
+  totalPoints: number;
+  correctPicks: number;
+  totalPicks: number;
+  accuracy: string;
 } 

@@ -7,8 +7,8 @@ import { ToastProvider } from "@/contexts/ToastContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FinalPoint - F1 P10 Prediction League",
-  description: "Join the ultimate F1 P10 prediction league",
+  title: "FinalPoint - F1 Prediction Game",
+  description: "Join the ultimate F1 prediction game",
 };
 
 export default function RootLayout({

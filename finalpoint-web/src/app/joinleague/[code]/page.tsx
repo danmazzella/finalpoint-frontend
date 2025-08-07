@@ -169,7 +169,7 @@ export default function JoinLeaguePage() {
                                 <div className="ml-3">
                                     <h3 className="text-sm font-medium text-blue-800">About This League</h3>
                                     <p className="text-sm text-blue-700 mt-1">
-                                        This is an F1 P10 prediction league. Members make weekly predictions on which driver will finish in 10th place.
+                                        This is an F1 prediction game. Members make weekly predictions on which driver will finish in specific positions.
                                     </p>
                                 </div>
                             </div>

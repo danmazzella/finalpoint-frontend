@@ -1,11 +1,11 @@
 # FinalPoint Mobile App
 
-A React Native mobile application for the F1 P10 Prediction League.
+A React Native mobile application for the F1 Prediction Game.
 
 ## Features
 
 - **User Authentication**: Sign up and login functionality
-- **League Management**: Create and join F1 prediction leagues
+- **League Management**: Create and join F1 prediction game
 - **P10 Predictions**: Make weekly predictions for which driver will finish in 10th place
 - **Real-time Updates**: View league standings and pick status
 - **Modern UI**: Clean, intuitive mobile interface

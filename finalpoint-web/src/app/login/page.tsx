@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-pink-600 mb-2">FinalPoint</h1>
-          <h2 className="text-xl text-gray-600">F1 P10 Prediction League</h2>
+          <h2 className="text-xl text-gray-600">F1 Prediction Game</h2>
         </div>
       </div>
 

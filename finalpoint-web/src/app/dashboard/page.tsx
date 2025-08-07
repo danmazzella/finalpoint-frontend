@@ -21,7 +21,7 @@ interface GlobalStats {
   correctPicks: number;
   accuracy: number;
   averagePoints: number;
-  averageDistanceFromP10: number;
+  averageDistanceFromTarget: number;
 }
 
 export default function DashboardPage() {
@@ -41,7 +41,7 @@ export default function DashboardPage() {
     correctPicks: 0,
     accuracy: 0,
     averagePoints: 0,
-    averageDistanceFromP10: 0
+    averageDistanceFromTarget: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -100,7 +100,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">FinalPoint</h1>
-              <p className="text-gray-600">F1 P10 Prediction League</p>
+              <p className="text-gray-600">F1 Prediction Game</p>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-gray-700">Welcome, {user?.name}</span>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
               <div className="text-sm text-gray-500">Global Accuracy</div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Pick Accuracy Chart */}
             <div>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -309,8 +309,8 @@ export default function DashboardPage() {
                   <span className="text-lg font-bold text-gray-900">{globalStats.averagePoints}</span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Average Distance from P10</span>
-                  <span className="text-lg font-bold text-gray-900">{globalStats.averageDistanceFromP10} positions</span>
+                  <span className="text-sm font-medium text-gray-700">Average Distance from Target</span>
+                  <span className="text-lg font-bold text-gray-900">{globalStats.averageDistanceFromTarget} positions</span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                   <span className="text-sm font-medium text-gray-700">Correct Picks</span>

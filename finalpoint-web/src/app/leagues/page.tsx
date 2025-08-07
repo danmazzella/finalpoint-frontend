@@ -66,7 +66,7 @@ export default function LeaguesPage() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">My Leagues</h1>
-              <p className="text-gray-600">Manage your F1 prediction leagues</p>
+              <p className="text-gray-600">Manage your F1 prediction game</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link

@@ -1,8 +1,8 @@
 # FinalPoint Web App
 
-A modern web application for the F1 P10 Prediction League, built with Next.js and Tailwind CSS.
+A modern web application for the F1 Prediction Game, built with Next.js and Tailwind CSS.
 
-## 🚀 Features
+## �� Features
 
 - **User Authentication**: Sign up and login functionality
 - **League Management**: Create and join F1 prediction leagues
@@ -154,4 +154,4 @@ For support, please open an issue in the repository or contact the development t
 
 ---
 
-**FinalPoint Web App** - The ultimate F1 P10 prediction league platform! 🏎️🏆
+**FinalPoint Web App** - The ultimate F1 prediction game platform! 🏎️🏆

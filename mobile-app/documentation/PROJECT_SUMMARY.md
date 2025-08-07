@@ -1,8 +1,6 @@
-# FinalPoint Project Summary
+# FinalPoint Mobile App - Project Summary
 
-## Project Overview
-
-FinalPoint is a F1 P10 Prediction League app that allows users to:
+FinalPoint is a F1 Prediction Game app that allows users to:
 - Sign up and create accounts
 - Create or join leagues
 - Make weekly predictions for which F1 driver will finish in 10th place

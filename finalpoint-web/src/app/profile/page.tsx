@@ -169,7 +169,7 @@ export default function ProfilePage() {
           {/* App Version */}
           <div className="text-center mt-6">
             <p className="text-sm text-gray-500">FinalPoint v1.0.0</p>
-            <p className="text-xs text-gray-400 mt-1">F1 P10 Prediction League</p>
+            <p className="text-xs text-gray-400 mt-1">F1 Prediction Game</p>
           </div>
         </div>
       </main>

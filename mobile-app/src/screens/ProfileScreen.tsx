@@ -93,7 +93,7 @@ const ProfileScreen = () => {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>FinalPoint v1.0.0</Text>
-        <Text style={styles.footerSubtext}>F1 P10 Prediction League</Text>
+        <Text style={styles.footerSubtext}>F1 Prediction Game</Text>
       </View>
     </ScrollView>
   );

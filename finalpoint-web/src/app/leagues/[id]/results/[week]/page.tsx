@@ -4,34 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { picksAPI, f1racesAPI, leaguesAPI } from '@/lib/api';
+import { picksAPI, f1racesAPI, leaguesAPI, RaceResultV2 } from '@/lib/api';
 import Link from 'next/link';
-
-interface RaceResult {
-    id: number;
-    userId: number;
-    userName: string;
-    driverId: number;
-    driverName: string;
-    driverTeam: string;
-    actualP10DriverId: number;
-    actualP10DriverName: string;
-    actualP10DriverTeam: string;
-    positionDifference: number | null;
-    isCorrect: boolean;
-    points: number;
-}
-
-interface RaceResultsData {
-    leagueId: number;
-    weekNumber: number;
-    actualP10DriverId: number;
-    actualP10DriverName: string;
-    actualP10DriverTeam: string;
-    totalPicks: number;
-    correctPicks: number;
-    results: RaceResult[];
-}
 
 interface Race {
     id: number;
@@ -47,6 +21,7 @@ interface League {
     ownerId: number;
     joinCode: string;
     memberCount: number;
+    requiredPositions?: number[];
 }
 
 export default function RaceResultsPage() {
@@ -58,12 +33,13 @@ export default function RaceResultsPage() {
     const leagueId = params.id as string;
     const weekNumber = params.week as string;
 
-    const [results, setResults] = useState<RaceResultsData | null>(null);
+    const [results, setResults] = useState<RaceResultV2[]>([]);
     const [loading, setLoading] = useState(true);
     const [races, setRaces] = useState<Race[]>([]);
     const [selectedWeek, setSelectedWeek] = useState(parseInt(weekNumber));
     const [showWeekSelector, setShowWeekSelector] = useState(false);
     const [league, setLeague] = useState<League | null>(null);
+    const [requiredPositions, setRequiredPositions] = useState<number[]>([10]);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const selectedWeekRef = useRef<HTMLButtonElement>(null);
 
@@ -100,9 +76,10 @@ export default function RaceResultsPage() {
     const loadRaceResults = async () => {
         try {
             setLoading(true);
-            const response = await picksAPI.getRaceResults(parseInt(leagueId), selectedWeek);
+            const response = await picksAPI.getRaceResultsV2(parseInt(leagueId), selectedWeek);
             if (response.data.success) {
-                setResults(response.data.data);
+                // The API returns an object with a 'results' property containing the array
+                setResults(response.data.data.results || []);
             }
         } catch (error: unknown) {
             console.error('Error loading race results:', error);
@@ -112,6 +89,21 @@ export default function RaceResultsPage() {
             setLoading(false);
         }
     };
+
+    const loadRequiredPositions = async () => {
+        try {
+            const response = await picksAPI.getLeaguePositions(parseInt(leagueId));
+            if (response.data.success) {
+                setRequiredPositions(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error loading required positions:', error);
+        }
+    };
+
+    useEffect(() => {
+        loadRequiredPositions();
+    }, [leagueId]);
 
     const handleWeekChange = (week: number) => {
         setSelectedWeek(week);
@@ -147,19 +139,30 @@ export default function RaceResultsPage() {
         }
     };
 
-    const getPositionDifferenceText = (difference: number | null) => {
-        if (difference === null) return 'No pick made';
-        if (difference === 0) return 'Correct!';
-        if (difference === 1) return '1 position off';
-        return `${difference} positions off`;
-    };
-
-    const getPositionDifferenceColor = (difference: number | null) => {
-        if (difference === null) return 'text-gray-400 bg-gray-100';
-        if (difference === 0) return 'text-green-600 bg-green-100';
-        if (difference <= 2) return 'text-yellow-600 bg-yellow-100';
-        if (difference <= 5) return 'text-orange-600 bg-orange-100';
-        return 'text-red-600 bg-red-100';
+    const getPositionLabel = (position: number) => {
+        const labels: { [key: number]: string } = {
+            1: 'P1 (Winner)',
+            2: 'P2 (Second)',
+            3: 'P3 (Third)',
+            4: 'P4',
+            5: 'P5',
+            6: 'P6',
+            7: 'P7',
+            8: 'P8',
+            9: 'P9',
+            10: 'P10',
+            11: 'P11',
+            12: 'P12',
+            13: 'P13',
+            14: 'P14',
+            15: 'P15',
+            16: 'P16',
+            17: 'P17',
+            18: 'P18',
+            19: 'P19',
+            20: 'P20'
+        };
+        return labels[position] || `P${position}`;
     };
 
     const getCurrentRace = () => {
@@ -178,7 +181,7 @@ export default function RaceResultsPage() {
         );
     }
 
-    if (!results) {
+    if (!results || results.length === 0) {
         const currentRace = getCurrentRace();
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -225,6 +228,12 @@ export default function RaceResultsPage() {
     const canGoPrevious = currentIndex > 0;
     const canGoNext = currentIndex < races.length - 1;
 
+    // Calculate summary stats
+    const totalParticipants = results.length;
+    const totalPoints = results.reduce((sum, result) => sum + result.totalPoints, 0);
+    const totalCorrect = results.reduce((sum, result) => sum + result.totalCorrect, 0);
+    const hasScoredResults = results.some(result => result.picks.some(pick => pick.actualDriverId !== null));
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -239,7 +248,7 @@ export default function RaceResultsPage() {
                                 </span>
                                 <span>•</span>
                                 <span>
-                                    {currentRace ? currentRace.raceName : `Week ${results.weekNumber}`} Results
+                                    {currentRace ? currentRace.raceName : `Week ${selectedWeek}`} Results
                                 </span>
                             </div>
                         </div>
@@ -348,47 +357,106 @@ export default function RaceResultsPage() {
                     </div>
                 </div>
 
-                {/* Actual Result - Only show if race has been scored */}
-                {results.actualP10DriverName && (
+                {/* Multiple Position Notice */}
+                {requiredPositions.length > 1 && (
                     <div className="bg-white shadow rounded-lg p-6 mb-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Actual P10 Result</h2>
-                        <div className="flex items-center space-x-4">
-                            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                                <span className="text-green-600 font-medium text-lg">🏆</span>
-                            </div>
-                            <div>
-                                <p className="text-lg font-medium text-gray-900">{results.actualP10DriverName}</p>
-                                <p className="text-sm text-gray-500">{results.actualP10DriverTeam}</p>
-                            </div>
+                        <div className="mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                View Results by Position
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                                This league requires picks for multiple positions. Click on a position to see all members&apos; picks for that specific position.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                            {requiredPositions.map((position) => (
+                                <Link
+                                    key={position}
+                                    href={`/leagues/${leagueId}/results/${selectedWeek}/position/${position}`}
+                                    className="group relative bg-gradient-to-r from-pink-50 to-pink-100 border border-pink-200 rounded-lg p-4 hover:from-pink-100 hover:to-pink-200 hover:border-pink-300 transition-all duration-200"
+                                >
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-pink-600 mb-1">
+                                            P{position}
+                                        </div>
+                                        <div className="text-xs text-pink-700 font-medium">
+                                            {getPositionLabel(position).split(' ')[1] || 'Position'}
+                                        </div>
+                                        <div className="mt-2 text-xs text-pink-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            View Results →
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 )}
 
-                {/* Summary Stats - Only show if race has been scored */}
-                {results.actualP10DriverName && (
+                {/* Actual Race Results Section */}
+                {hasScoredResults && (
                     <div className="bg-white shadow rounded-lg p-6 mb-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Summary</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="text-center">
-                                <p className="text-2xl font-bold text-gray-900">{results.totalPicks}</p>
-                                <p className="text-sm text-gray-500">Total Picks</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-2xl font-bold text-green-600">{results.correctPicks}</p>
-                                <p className="text-sm text-gray-500">Correct Picks</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-2xl font-bold text-blue-600">
-                                    {results.totalPicks > 0 ? Math.round((results.correctPicks / results.totalPicks) * 100) : 0}%
-                                </p>
-                                <p className="text-sm text-gray-500">Accuracy</p>
-                            </div>
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Actual Race Results</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {requiredPositions.map((position) => {
+                                // Find the first result that has actual data for this position
+                                const positionResult = results.find(result =>
+                                    result.picks.some(pick =>
+                                        pick.position === position && pick.actualDriverName
+                                    )
+                                );
+                                const actualPick = positionResult?.picks.find(pick => pick.position === position);
+
+                                return (
+                                    <div key={position} className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-sm font-medium text-gray-500">
+                                                {getPositionLabel(position)}
+                                            </span>
+                                        </div>
+                                        {actualPick?.actualDriverName ? (
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {actualPick.actualDriverName}
+                                                </p>
+                                                <p className="text-xs text-gray-500">{actualPick.actualDriverTeam}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 italic">No result available</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
+
+                {/* Summary Stats */}
+                <div className="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Summary</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900">{totalParticipants}</p>
+                            <p className="text-sm text-gray-500">Participants</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-green-600">{totalCorrect}</p>
+                            <p className="text-sm text-gray-500">Total Correct Picks</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-blue-600">{totalPoints}</p>
+                            <p className="text-sm text-gray-500">Total Points</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-purple-600">
+                                {totalParticipants > 0 ? Math.round((totalCorrect / (totalParticipants * requiredPositions.length)) * 100) : 0}%
+                            </p>
+                            <p className="text-sm text-gray-500">Overall Accuracy</p>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Not Scored Message */}
-                {!results.actualP10DriverName && results.totalPicks > 0 && (
+                {!hasScoredResults && results.length > 0 && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -412,14 +480,14 @@ export default function RaceResultsPage() {
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h2 className="text-lg font-medium text-gray-900">
-                            {results.actualP10DriverName ? 'All Picks' : 'Picks Made'}
+                            {hasScoredResults ? 'All Results' : 'All Picks'}
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    {results.actualP10DriverName && (
+                                    {hasScoredResults && (
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Rank
                                         </th>
@@ -428,24 +496,27 @@ export default function RaceResultsPage() {
                                         User
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Pick
+                                        Picks Made
                                     </th>
-                                    {results.actualP10DriverName && (
+                                    {hasScoredResults && (
                                         <>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Result
+                                                Correct Picks
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Points
                                             </th>
                                         </>
                                     )}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {results.results.map((result, index) => (
-                                    <tr key={result.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                        {results.actualP10DriverName && (
+                                {results.map((result, index) => (
+                                    <tr key={result.userId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        {hasScoredResults && (
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${index === 0 ? 'bg-yellow-100' :
@@ -466,29 +537,34 @@ export default function RaceResultsPage() {
                                             <div className="text-sm font-medium text-gray-900">{result.userName}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div>
-                                                {result.driverName ? (
-                                                    <>
-                                                        <div className="text-sm font-medium text-gray-900">{result.driverName}</div>
-                                                        <div className="text-sm text-gray-500">{result.driverTeam}</div>
-                                                    </>
+                                            <div className="text-sm text-gray-900">
+                                                {result.hasMadeAllPicks ? (
+                                                    <span className="text-green-600 font-medium">All {requiredPositions.length} picks made</span>
                                                 ) : (
-                                                    <div className="text-sm text-gray-400 italic">No pick made</div>
+                                                    <span className="text-orange-600 font-medium">
+                                                        {result.picks.filter(p => p.driverId !== null).length} of {requiredPositions.length} picks made
+                                                    </span>
                                                 )}
                                             </div>
                                         </td>
-                                        {results.actualP10DriverName && (
+                                        {hasScoredResults && (
                                             <>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPositionDifferenceColor(result.positionDifference)}`}>
-                                                        {getPositionDifferenceText(result.positionDifference)}
-                                                    </span>
+                                                    <div className="text-sm text-gray-900">{result.totalCorrect}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">{result.points}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{result.totalPoints}</div>
                                                 </td>
                                             </>
                                         )}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Link
+                                                href={`/leagues/${leagueId}/results/${selectedWeek}/member/${result.userId}`}
+                                                className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-pink-700 bg-pink-100 hover:bg-pink-200"
+                                            >
+                                                View All Picks
+                                            </Link>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
