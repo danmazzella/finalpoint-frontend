@@ -3,8 +3,41 @@
 import { useState, useEffect } from 'react';
 import { notificationsAPI } from '@/lib/api';
 
+interface DebugInfo {
+    browserSupport?: {
+        serviceWorker: boolean;
+        pushManager: boolean;
+        notification: boolean;
+        userAgent: string;
+    };
+    notificationPermission?: string;
+    serviceWorkerRegistrations?: number;
+    serviceWorkerDetails?: Array<{
+        scope: string;
+        active: boolean;
+        waiting: boolean;
+        installing: boolean;
+    }>;
+    serviceWorkerError?: string;
+    environmentVariables?: {
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: string;
+        NEXT_PUBLIC_API_URL: string;
+    };
+    currentLocation?: {
+        href: string;
+        origin: string;
+        protocol: string;
+        hostname: string;
+    };
+    apiConnection?: {
+        success: boolean;
+        status?: number;
+        error?: string;
+    };
+}
+
 export default function DebugPushPage() {
-    const [debugInfo, setDebugInfo] = useState<any>({});
+    const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
     const [isLoading, setIsLoading] = useState(true);
     const [testResult, setTestResult] = useState('');
 
@@ -39,7 +72,7 @@ export default function DebugPushPage() {
                 installing: !!reg.installing
             }));
         } catch (error) {
-            info.serviceWorkerError = error.message;
+            info.serviceWorkerError = error instanceof Error ? error.message : 'Unknown error';
         }
 
         // Check environment variables
@@ -66,7 +99,7 @@ export default function DebugPushPage() {
         } catch (error) {
             info.apiConnection = {
                 success: false,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             };
         }
 
@@ -115,11 +148,13 @@ export default function DebugPushPage() {
                 );
                 setTestResult(prev => prev + '\n✅ Token registered with server');
             } catch (error) {
-                setTestResult(prev => prev + `\n❌ Failed to register with server: ${error.message}`);
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                setTestResult(prev => prev + `\n❌ Failed to register with server: ${errorMessage}`);
             }
 
         } catch (error) {
-            setTestResult(`❌ Error: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            setTestResult(`❌ Error: ${errorMessage}`);
         }
     };
 
@@ -134,7 +169,8 @@ export default function DebugPushPage() {
                 setTestResult(`❌ Test failed: ${response.data.error || 'Unknown error'}`);
             }
         } catch (error) {
-            setTestResult(`❌ Error sending test notification: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            setTestResult(`❌ Error sending test notification: ${errorMessage}`);
         }
     };
 
@@ -180,10 +216,9 @@ export default function DebugPushPage() {
                         </div>
                         <div>
                             <span className="font-medium">Permission:</span>
-                            <span className={`ml-2 ${
-                                debugInfo.notificationPermission === 'granted' ? 'text-green-600' : 
+                            <span className={`ml-2 ${debugInfo.notificationPermission === 'granted' ? 'text-green-600' :
                                 debugInfo.notificationPermission === 'denied' ? 'text-red-600' : 'text-yellow-600'
-                            }`}>
+                                }`}>
                                 {debugInfo.notificationPermission || 'Unknown'}
                             </span>
                         </div>
@@ -198,7 +233,7 @@ export default function DebugPushPage() {
                             <span className="font-medium">Registrations:</span>
                             <span className="ml-2">{debugInfo.serviceWorkerRegistrations || 0}</span>
                         </div>
-                        {debugInfo.serviceWorkerDetails && debugInfo.serviceWorkerDetails.map((sw: any, index: number) => (
+                        {debugInfo.serviceWorkerDetails && debugInfo.serviceWorkerDetails.map((sw, index: number) => (
                             <div key={index} className="ml-4 text-sm">
                                 <div>Scope: {sw.scope}</div>
                                 <div>Active: {sw.active ? 'Yes' : 'No'}</div>

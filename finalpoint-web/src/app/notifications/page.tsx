@@ -112,15 +112,15 @@ export default function NotificationsPage() {
                     const registration = await navigator.serviceWorker.register('/sw.js', {
                         scope: '/'
                     });
-                    
+
                     console.log('Service worker registered:', registration);
-                    
+
                     // Wait for service worker to be ready
                     await navigator.serviceWorker.ready;
-                    
+
                     // Check if already subscribed
                     let subscription = await registration.pushManager.getSubscription();
-                    
+
                     if (!subscription) {
                         // Subscribe to push notifications
                         subscription = await registration.pushManager.subscribe({
