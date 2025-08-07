@@ -1,12 +1,33 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.15:6075/api';
+// API URL configuration
+const getApiBaseUrl = () => {
+  // Check for environment variable first
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // Check if we're in production (deployed to finalpoint.app)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'finalpoint.app' || hostname === 'www.finalpoint.app') {
+      return 'https://api.finalpoint.app/api';
+    }
+  }
+  
+  // Fallback to development URL
+  return 'http://192.168.0.15:6075/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const apiService = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout for better error handling
+  timeout: 10000,
 });
 
 // Request interceptor to add auth token
