@@ -40,11 +40,10 @@ apiService.interceptors.response.use(
 
 // API methods
 export const authAPI = {
-  login: (email: string, password: string) =>
-    apiService.post('/users/login', { email, password }),
-  signup: (email: string, password: string, name: string) =>
-    apiService.post('/users/signup', { email, password, name }),
+  signup: (data: SignupData) => apiService.post('/users/signup', data),
+  login: (data: LoginData) => apiService.post('/users/login', data),
   getUserStats: () => apiService.get('/users/stats'),
+  getGlobalStats: () => apiService.get('/users/global-stats'),
 };
 
 export const leaguesAPI = {
@@ -65,6 +64,8 @@ export const picksAPI = {
   getUserPicks: (leagueId: number) => apiService.get(`/picks/user/${leagueId}`),
   getLeaguePicks: (leagueId: number, weekNumber: number) =>
     apiService.get(`/picks/league/${leagueId}/week/${weekNumber}`),
+  getRaceResults: (leagueId: number, weekNumber: number) =>
+    apiService.get(`/picks/results/${leagueId}/week/${weekNumber}`),
 };
 
 export const driversAPI = {
@@ -98,8 +99,10 @@ export interface League {
   name: string;
   ownerId: number;
   seasonYear: number;
+  joinCode?: string;
   memberCount?: number;
   isMember?: boolean;
+  userRole?: 'Owner' | 'Member';
 }
 
 export interface Driver {

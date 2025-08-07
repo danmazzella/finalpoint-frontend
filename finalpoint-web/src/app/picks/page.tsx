@@ -55,7 +55,10 @@ export default function PicksPage() {
   };
 
   const loadExistingPick = async () => {
-    if (!selectedLeague || !currentRace) return;
+    if (!selectedLeague || !currentRace) {
+      setSelectedDriver(null);
+      return;
+    }
 
     try {
       const response = await picksAPI.getUserPicks(parseInt(selectedLeague));
@@ -64,14 +67,21 @@ export default function PicksPage() {
         const currentPick = userPicks.find((pick: any) => pick.weekNumber === currentRace.weekNumber);
         if (currentPick) {
           setSelectedDriver(currentPick.driverId);
+        } else {
+          setSelectedDriver(null);
         }
+      } else {
+        setSelectedDriver(null);
       }
     } catch (error) {
       console.error('Error loading existing pick:', error);
+      setSelectedDriver(null);
     }
   };
 
+  // Clear selected driver when league changes
   useEffect(() => {
+    setSelectedDriver(null);
     if (selectedLeague && currentRace) {
       loadExistingPick();
     }
@@ -89,8 +99,6 @@ export default function PicksPage() {
       if (response.data.success) {
         setSelectedDriver(driverId);
         showToast('Pick submitted successfully!', 'success');
-        // Refresh the pick display
-        await loadExistingPick();
       }
     } catch (error: any) {
       console.error('Error making pick:', error);
@@ -98,6 +106,12 @@ export default function PicksPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Handle league selection change
+  const handleLeagueChange = (leagueId: string) => {
+    setSelectedLeague(leagueId);
+    setSelectedDriver(null); // Clear the selected driver immediately
   };
 
   if (loading) {
@@ -149,7 +163,7 @@ export default function PicksPage() {
           </div>
           <select
             value={selectedLeague}
-            onChange={(e) => setSelectedLeague(e.target.value)}
+            onChange={(e) => handleLeagueChange(e.target.value)}
             className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-gray-900"
           >
             <option value="" className="text-gray-500">Choose a league</option>

@@ -3,14 +3,22 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { leaguesAPI, activityAPI, League } from '@/lib/api';
+import { leaguesAPI, activityAPI, League, f1racesAPI } from '@/lib/api';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+
+interface CurrentRace {
+  weekNumber: number;
+  raceName: string;
+  raceDate: string;
+  status: string;
+}
 
 export default function LeagueDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const params = useParams();
+  const router = useRouter();
   const leagueId = params.id as string;
 
   const [league, setLeague] = useState<League | null>(null);
@@ -24,12 +32,17 @@ export default function LeagueDetailPage() {
   const [stats, setStats] = useState<any>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [showStandings, setShowStandings] = useState(false);
+  const [currentRace, setCurrentRace] = useState<CurrentRace | null>(null);
+  const [loadingCurrentRace, setLoadingCurrentRace] = useState(false);
 
   useEffect(() => {
-    if (leagueId) {
+    if (user) {
       loadLeague();
+      loadCurrentRace();
+      loadRecentActivity(parseInt(leagueId));
+      loadLeagueStats(parseInt(leagueId));
     }
-  }, [leagueId]);
+  }, [user, leagueId]);
 
   const loadLeague = async () => {
     try {
@@ -98,6 +111,20 @@ export default function LeagueDetailPage() {
       }
     } catch (error: any) {
       console.error('Error loading league stats:', error);
+    }
+  };
+
+  const loadCurrentRace = async () => {
+    try {
+      setLoadingCurrentRace(true);
+      const response = await f1racesAPI.getCurrentRace();
+      if (response.data.success) {
+        setCurrentRace(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error loading current race:', error);
+    } finally {
+      setLoadingCurrentRace(false);
     }
   };
 
@@ -179,8 +206,110 @@ export default function LeagueDetailPage() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* League Info */}
+          {/* Quick Actions and League Stats - Left Side */}
+          <div className="lg:col-span-1">
+            {/* Quick Actions */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+              <div className="space-y-3">
+                <Link
+                  href={`/picks?league=${league.id}`}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
+                >
+                  Make Picks
+                </Link>
+                {!isMember && (
+                  <button
+                    onClick={joinLeague}
+                    disabled={joining}
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {joining ? 'Joining...' : 'Join League'}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (!showStandings) {
+                      loadLeagueStandings(parseInt(leagueId));
+                    }
+                    setShowStandings(!showStandings);
+                    setShowMembers(false);
+
+                    // Scroll to standings section after a brief delay to allow content to render
+                    if (!showStandings) {
+                      setTimeout(() => {
+                        const standingsElement = document.getElementById('league-standings');
+                        if (standingsElement) {
+                          standingsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  {showStandings ? 'Hide Standings' : 'View Standings'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (!showMembers) {
+                      loadLeagueMembers(parseInt(leagueId));
+                    }
+                    setShowMembers(!showMembers);
+                    setShowStandings(false);
+
+                    // Scroll to members section after a brief delay to allow content to render
+                    if (!showMembers) {
+                      setTimeout(() => {
+                        const membersElement = document.getElementById('league-members');
+                        if (membersElement) {
+                          membersElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  {showMembers ? 'Hide Members' : 'View Members'}
+                </button>
+                <Link
+                  href={`/leagues/${leagueId}/results/${currentRace?.weekNumber || 1}`}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  {loadingCurrentRace ? 'Loading...' : 'View Results'}
+                </Link>
+                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                  League Settings
+                </button>
+              </div>
+            </div>
+
+            {/* League Stats */}
+            <div className="bg-white shadow rounded-lg p-6 mt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">League Stats</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Total Picks</span>
+                  <span className="text-sm font-medium text-gray-900">{stats?.totalPicks || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Correct Picks</span>
+                  <span className="text-sm font-medium text-gray-900">{stats?.correctPicks || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Accuracy</span>
+                  <span className="text-sm font-medium text-gray-900">{stats?.overallAccuracy || 0}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Average Points</span>
+                  <span className="text-sm font-medium text-gray-900">{stats?.averagePoints || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* League Info and Recent Activity - Right Side */}
           <div className="lg:col-span-2">
+            {/* League Info */}
             <div className="bg-white shadow rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-medium text-gray-900">League Information</h2>
@@ -188,21 +317,23 @@ export default function LeagueDetailPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => {
-                        const shareUrl = `${window.location.origin}/share/${league.joinCode}`;
+                        const shareUrl = `${window.location.origin}/joinleague/${league.joinCode}`;
                         navigator.clipboard.writeText(shareUrl);
-                        showToast('Share link copied to clipboard!', 'success');
+                        showToast('Invite link copied! Share it with friends to join your league.', 'success');
                       }}
                       className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
                       <svg className="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                       </svg>
-                      Share Link
+                      Invite Friends
                     </button>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(league.joinCode);
-                        showToast('Join code copied to clipboard!', 'success');
+                        if (league.joinCode) {
+                          navigator.clipboard.writeText(league.joinCode);
+                          showToast('Join code copied to clipboard!', 'success');
+                        }
                       }}
                       className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
@@ -331,84 +462,10 @@ export default function LeagueDetailPage() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Link
-                  href={`/picks?league=${league.id}`}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
-                >
-                  Make Picks
-                </Link>
-                {!isMember && (
-                  <button
-                    onClick={joinLeague}
-                    disabled={joining}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {joining ? 'Joining...' : 'Join League'}
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    if (!showStandings) {
-                      loadLeagueStandings(parseInt(leagueId));
-                    }
-                    setShowStandings(!showStandings);
-                    setShowMembers(false);
-                  }}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  {showStandings ? 'Hide Standings' : 'View Standings'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (!showMembers) {
-                      loadLeagueMembers(parseInt(leagueId));
-                    }
-                    setShowMembers(!showMembers);
-                    setShowStandings(false);
-                  }}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  {showMembers ? 'Hide Members' : 'View Members'}
-                </button>
-                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  League Settings
-                </button>
-              </div>
-            </div>
-
-            {/* League Stats */}
-            <div className="bg-white shadow rounded-lg p-6 mt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">League Stats</h2>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Total Picks</span>
-                  <span className="text-sm font-medium text-gray-900">{stats?.totalPicks || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Correct Picks</span>
-                  <span className="text-sm font-medium text-gray-900">{stats?.correctPicks || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Accuracy</span>
-                  <span className="text-sm font-medium text-gray-900">{stats?.overallAccuracy || 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Average Points</span>
-                  <span className="text-sm font-medium text-gray-900">{stats?.averagePoints || 0}</span>
-                </div>
-              </div>
-            </div>
 
             {/* League Members */}
             {showMembers && (
-              <div className="bg-white shadow rounded-lg p-6 mt-6">
+              <div id="league-members" className="bg-white shadow rounded-lg p-6 mt-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">League Members</h2>
                 {members.length > 0 ? (
                   <div className="space-y-3">
@@ -422,13 +479,12 @@ export default function LeagueDetailPage() {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                            <p className="text-xs text-gray-500">{member.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${member.role === 'Owner'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-gray-100 text-gray-800'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
                             }`}>
                             {member.role}
                           </span>
@@ -453,7 +509,7 @@ export default function LeagueDetailPage() {
 
             {/* League Standings */}
             {showStandings && (
-              <div className="bg-white shadow rounded-lg p-6 mt-6">
+              <div id="league-standings" className="bg-white shadow rounded-lg p-6 mt-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">League Standings</h2>
                 {standings.length > 0 ? (
                   <div className="space-y-3">
@@ -461,12 +517,12 @@ export default function LeagueDetailPage() {
                       <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className={`h-8 w-8 rounded-full flex items-center justify-center ${index === 0 ? 'bg-yellow-100' :
-                              index === 1 ? 'bg-gray-100' :
-                                index === 2 ? 'bg-orange-100' : 'bg-gray-100'
+                            index === 1 ? 'bg-gray-100' :
+                              index === 2 ? 'bg-orange-100' : 'bg-gray-100'
                             }`}>
                             <span className={`font-medium text-sm ${index === 0 ? 'text-yellow-600' :
-                                index === 1 ? 'text-gray-600' :
-                                  index === 2 ? 'text-orange-600' : 'text-gray-600'
+                              index === 1 ? 'text-gray-600' :
+                                index === 2 ? 'text-orange-600' : 'text-gray-600'
                               }`}>
                               {index + 1}
                             </span>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { leaguesAPI, authAPI, League } from '@/lib/api';
 import Link from 'next/link';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface UserStats {
   totalPicks: number;
@@ -11,6 +12,16 @@ interface UserStats {
   totalPoints: number;
   averagePoints: number;
   accuracy: number;
+}
+
+interface GlobalStats {
+  totalUsers: number;
+  totalLeagues: number;
+  totalPicks: number;
+  correctPicks: number;
+  accuracy: number;
+  averagePoints: number;
+  averageDistanceFromP10: number;
 }
 
 export default function DashboardPage() {
@@ -23,6 +34,15 @@ export default function DashboardPage() {
     averagePoints: 0,
     accuracy: 0
   });
+  const [globalStats, setGlobalStats] = useState<GlobalStats>({
+    totalUsers: 0,
+    totalLeagues: 0,
+    totalPicks: 0,
+    correctPicks: 0,
+    accuracy: 0,
+    averagePoints: 0,
+    averageDistanceFromP10: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,9 +52,10 @@ export default function DashboardPage() {
   const loadLeagues = async () => {
     try {
       setLoading(true);
-      const [leaguesResponse, statsResponse] = await Promise.all([
+      const [leaguesResponse, statsResponse, globalStatsResponse] = await Promise.all([
         leaguesAPI.getLeagues(),
-        authAPI.getUserStats()
+        authAPI.getUserStats(),
+        authAPI.getGlobalStats()
       ]);
 
       if (leaguesResponse.data.success) {
@@ -44,12 +65,24 @@ export default function DashboardPage() {
       if (statsResponse.data.success) {
         setUserStats(statsResponse.data.data);
       }
+
+      if (globalStatsResponse.data.success) {
+        setGlobalStats(globalStatsResponse.data.data);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Prepare chart data
+  const chartData = [
+    { name: 'Correct Picks', value: globalStats.correctPicks, color: '#10B981' },
+    { name: 'Incorrect Picks', value: globalStats.totalPicks - globalStats.correctPicks, color: '#EF4444' }
+  ];
+
+  const COLORS = ['#10B981', '#EF4444'];
 
   if (loading) {
     return (
@@ -83,71 +116,8 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-pink-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Active Leagues</dt>
-                    <dd className="text-lg font-medium text-gray-900">{leagues.length}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Picks Made</dt>
-                    <dd className="text-lg font-medium text-gray-900">{userStats.totalPicks}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Points Earned</dt>
-                    <dd className="text-lg font-medium text-gray-900">{userStats.totalPoints}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Leagues Section */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        {/* Your Leagues Section */}
+        <div className="bg-white shadow overflow-hidden sm:rounded-md mb-8">
           <div className="px-4 py-5 sm:px-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Your Leagues</h3>
@@ -218,61 +188,141 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Link
-            href="/picks"
-            className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-500 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <div>
-              <span className="rounded-lg inline-flex p-3 bg-pink-50 text-pink-700 ring-4 ring-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-pink-500 rounded-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Active Leagues</dt>
+                    <dd className="text-lg font-medium text-gray-900">{leagues.length}</dd>
+                  </dl>
+                </div>
+              </div>
             </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-medium">
-                <span className="absolute inset-0" aria-hidden="true" />
-                Make Your Picks
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Submit your P10 predictions for this week's race.
-              </p>
-            </div>
-            <span className="pointer-events-none absolute top-6 right-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H4v2h16V3zM5 3H4v2h1V3zm0 16H4v1h1v-1zm16 0v1h1v-1h-1z" />
-              </svg>
-            </span>
-          </Link>
+          </div>
 
-          <Link
-            href="/leagues"
-            className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-pink-500 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Picks Made</dt>
+                    <dd className="text-lg font-medium text-gray-900">{userStats.totalPicks}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Accuracy</dt>
+                    <dd className="text-lg font-medium text-gray-900">{userStats.accuracy}%</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Global Stats Section */}
+        <div className="bg-white shadow rounded-lg p-6 mb-8">
+          <h2 className="text-lg font-medium text-gray-900 mb-6">Platform Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{globalStats.totalUsers}</div>
+              <div className="text-sm text-gray-500">Total Users</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{globalStats.totalLeagues}</div>
+              <div className="text-sm text-gray-500">Active Leagues</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{globalStats.totalPicks}</div>
+              <div className="text-sm text-gray-500">Total Picks</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{globalStats.accuracy}%</div>
+              <div className="text-sm text-gray-500">Global Accuracy</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Pick Accuracy Chart */}
             <div>
-              <span className="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </span>
+              <h3 className="text-md font-medium text-gray-900 mb-4">Pick Accuracy</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-medium">
-                <span className="absolute inset-0" aria-hidden="true" />
-                Manage Leagues
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Create new leagues or join existing ones.
-              </p>
+
+            {/* Additional Stats */}
+            <div>
+              <h3 className="text-md font-medium text-gray-900 mb-4">Performance Metrics</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Average Points per Pick</span>
+                  <span className="text-lg font-bold text-gray-900">{globalStats.averagePoints}</span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Average Distance from P10</span>
+                  <span className="text-lg font-bold text-gray-900">{globalStats.averageDistanceFromP10} positions</span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Correct Picks</span>
+                  <span className="text-lg font-bold text-green-600">{globalStats.correctPicks}</span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">Incorrect Picks</span>
+                  <span className="text-lg font-bold text-red-600">{globalStats.totalPicks - globalStats.correctPicks}</span>
+                </div>
+              </div>
             </div>
-            <span className="pointer-events-none absolute top-6 right-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H4v2h16V3zM5 3H4v2h1V3zm0 16H4v1h1v-1zm16 0v1h1v-1h-1z" />
-              </svg>
-            </span>
-          </Link>
+          </div>
         </div>
       </main>
     </div>
