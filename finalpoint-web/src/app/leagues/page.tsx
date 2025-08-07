@@ -126,8 +126,8 @@ export default function LeaguesPage() {
                         Season {league.seasonYear} • {league.memberCount || 1} member{league.memberCount !== 1 ? 's' : ''}
                         {league.userRole && (
                           <span className={`ml-2 px-2 py-1 text-xs rounded-full ${league.userRole === 'Owner'
-                              ? 'bg-pink-100 text-pink-800'
-                              : 'bg-gray-100 text-gray-800'
+                            ? 'bg-pink-100 text-pink-800'
+                            : 'bg-gray-100 text-gray-800'
                             }`}>
                             {league.userRole}
                           </span>

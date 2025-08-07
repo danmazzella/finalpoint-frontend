@@ -44,17 +44,17 @@ const ProfileScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Edit Profile</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Change Password</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Notification Settings</Text>
           <Text style={styles.menuItemArrow}>›</Text>
@@ -63,22 +63,22 @@ const ProfileScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>App</Text>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>About FinalPoint</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Privacy Policy</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Terms of Service</Text>
           <Text style={styles.menuItemArrow}>›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Help & Support</Text>
           <Text style={styles.menuItemArrow}>›</Text>

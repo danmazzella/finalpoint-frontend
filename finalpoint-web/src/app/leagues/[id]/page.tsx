@@ -34,6 +34,13 @@ export default function LeagueDetailPage() {
   const [showStandings, setShowStandings] = useState(false);
   const [currentRace, setCurrentRace] = useState<CurrentRace | null>(null);
   const [loadingCurrentRace, setLoadingCurrentRace] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [editingName, setEditingName] = useState('');
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +56,7 @@ export default function LeagueDetailPage() {
       setLoading(true);
       const response = await leaguesAPI.getLeague(parseInt(leagueId));
       if (response.data.success) {
+        console.log('League data:', response.data.data); // Debug log
         setLeague(response.data.data);
         setIsMember(response.data.data.isMember);
         // Load recent activity after league is loaded
@@ -146,6 +154,77 @@ export default function LeagueDetailPage() {
       showToast(error.response?.data?.message || 'Failed to join league. Please try again.', 'error');
     } finally {
       setJoining(false);
+    }
+  };
+
+  const updateLeagueName = async () => {
+    if (!league || !editingName.trim()) return;
+
+    try {
+      setUpdating(true);
+      const response = await leaguesAPI.updateLeague(league.id, editingName.trim());
+      if (response.data.success) {
+        showToast('League name updated successfully!', 'success');
+        setLeague({ ...league, name: editingName.trim() });
+        setShowSettings(false);
+        setEditingName('');
+        // Refresh recent activity to show the name change
+        loadRecentActivity(parseInt(leagueId));
+      }
+    } catch (error: any) {
+      console.error('Error updating league:', error);
+      showToast(error.response?.data?.message || 'Failed to update league name. Please try again.', 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const deleteLeague = async () => {
+    if (!league) return;
+
+    try {
+      setDeleting(true);
+      const response = await leaguesAPI.deleteLeague(league.id);
+      if (response.data.success) {
+        showToast('League deleted successfully!', 'success');
+        // Redirect to leagues page
+        router.push('/leagues');
+      }
+    } catch (error: any) {
+      console.error('Error deleting league:', error);
+      showToast(error.response?.data?.message || 'Failed to delete league. Please try again.', 'error');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const leaveLeague = async () => {
+    if (!league) return;
+
+    try {
+      setLeaving(true);
+      const response = await leaguesAPI.leaveLeague(league.id);
+      if (response.data.success) {
+        showToast('Successfully left the league!', 'success');
+        // Redirect to leagues page
+        router.push('/leagues');
+      }
+    } catch (error: any) {
+      console.error('Error leaving league:', error);
+      showToast(error.response?.data?.message || 'Failed to leave league. Please try again.', 'error');
+    } finally {
+      setLeaving(false);
+      setShowLeaveConfirm(false);
+    }
+  };
+
+  const openSettings = () => {
+    if (league) {
+      if (league.userRole === 'Owner') {
+        setEditingName(league.name);
+      }
+      setShowSettings(true);
     }
   };
 
@@ -277,9 +356,14 @@ export default function LeagueDetailPage() {
                 >
                   {loadingCurrentRace ? 'Loading...' : 'View Results'}
                 </Link>
-                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  League Settings
-                </button>
+                {league?.userRole && (
+                  <button
+                    onClick={openSettings}
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    League Settings
+                  </button>
+                )}
               </div>
             </div>
 
@@ -415,14 +499,18 @@ export default function LeagueDetailPage() {
                         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.activityType === 'pick_created' ? 'bg-green-100' :
                           activity.activityType === 'pick_changed' ? 'bg-blue-100' :
                             activity.activityType === 'user_joined' ? 'bg-purple-100' :
-                              activity.activityType === 'race_result_processed' ? 'bg-yellow-100' :
-                                'bg-pink-100'
+                              activity.activityType === 'user_left' ? 'bg-red-100' :
+                                activity.activityType === 'league_name_changed' ? 'bg-indigo-100' :
+                                  activity.activityType === 'race_result_processed' ? 'bg-yellow-100' :
+                                    'bg-pink-100'
                           }`}>
                           <svg className={`h-4 w-4 ${activity.activityType === 'pick_created' ? 'text-green-600' :
                             activity.activityType === 'pick_changed' ? 'text-blue-600' :
                               activity.activityType === 'user_joined' ? 'text-purple-600' :
-                                activity.activityType === 'race_result_processed' ? 'text-yellow-600' :
-                                  'text-pink-600'
+                                activity.activityType === 'user_left' ? 'text-red-600' :
+                                  activity.activityType === 'league_name_changed' ? 'text-indigo-600' :
+                                    activity.activityType === 'race_result_processed' ? 'text-yellow-600' :
+                                      'text-pink-600'
                             }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             {activity.activityType === 'pick_created' ? (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -430,6 +518,10 @@ export default function LeagueDetailPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             ) : activity.activityType === 'user_joined' ? (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                            ) : activity.activityType === 'user_left' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            ) : activity.activityType === 'league_name_changed' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             ) : activity.activityType === 'race_result_processed' ? (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             ) : (
@@ -442,6 +534,10 @@ export default function LeagueDetailPage() {
                         <p className="text-sm font-medium text-gray-900">
                           {activity.activityType === 'user_joined' ? (
                             `${activity.userName} joined the league`
+                          ) : activity.activityType === 'user_left' ? (
+                            `${activity.userName} left the league`
+                          ) : activity.activityType === 'league_name_changed' ? (
+                            `${activity.userName} changed the league name`
                           ) : activity.activityType === 'race_result_processed' ? (
                             `Race results processed for Week ${activity.weekNumber}`
                           ) : (
@@ -457,6 +553,10 @@ export default function LeagueDetailPage() {
                             `${activity.raceName ? `${activity.raceName} - ` : ''}${activity.driverName} (${activity.driverTeam}) finished in P${activity.position}`
                           ) : activity.activityType === 'user_joined' ? (
                             `Welcome to the league!`
+                          ) : activity.activityType === 'user_left' ? (
+                            `Goodbye!`
+                          ) : activity.activityType === 'league_name_changed' ? (
+                            `Changed from "${activity.previousDriverName}" to "${activity.driverName}"`
                           ) : (
                             `Picked ${activity.driverName} (${activity.driverTeam}) for P${activity.position}`
                           )}
@@ -571,6 +671,154 @@ export default function LeagueDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* League Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">League Settings</h3>
+
+              {league?.userRole === 'Owner' ? (
+                <>
+                  {/* Update League Name - Owner Only */}
+                  <div className="mb-6">
+                    <label htmlFor="leagueName" className="block text-sm font-medium text-gray-700 mb-2">
+                      League Name
+                    </label>
+                    <input
+                      type="text"
+                      id="leagueName"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-gray-900 placeholder-gray-500"
+                      placeholder="Enter league name"
+                    />
+                    <button
+                      onClick={updateLeagueName}
+                      disabled={updating || !editingName.trim()}
+                      className="mt-2 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updating ? 'Updating...' : 'Update Name'}
+                    </button>
+                  </div>
+
+                  {/* Delete League - Owner Only */}
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">Danger Zone</h4>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Once you delete a league, there is no going back. Please be certain.
+                    </p>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Delete League
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Leave League - Member Only */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">Leave League</h4>
+                    <p className="text-sm text-gray-500 mb-4">
+                      You can leave this league at any time. You can rejoin later if you have the join code.
+                    </p>
+                    <button
+                      onClick={() => setShowLeaveConfirm(true)}
+                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                    >
+                      Leave League
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Close Button */}
+              <div className="mt-4">
+                <button
+                  onClick={() => {
+                    setShowSettings(false);
+                    setEditingName('');
+                  }}
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2">Delete League</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to delete "{league?.name}"? This action cannot be undone and will permanently delete all league data including picks, standings, and activity.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={deleteLeague}
+                  disabled={deleting}
+                  className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? 'Deleting...' : 'Delete League'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+                <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2">Leave League</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to leave "{league?.name}"? You can rejoin later if you have the join code.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={leaveLeague}
+                  disabled={leaving}
+                  className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {leaving ? 'Leaving...' : 'Leave League'}
+                </button>
+                <button
+                  onClick={() => setShowLeaveConfirm(false)}
+                  className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

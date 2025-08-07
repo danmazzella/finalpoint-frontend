@@ -80,9 +80,9 @@ const SignupScreen = () => {
           onChangeText={setConfirmPassword}
           secureTextEntry
         />
-        
-        <TouchableOpacity 
-          style={styles.signupButton} 
+
+        <TouchableOpacity
+          style={styles.signupButton}
           onPress={handleSignup}
           disabled={isLoading}
         >
@@ -93,7 +93,7 @@ const SignupScreen = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.loginButton}
           onPress={() => navigation.navigate('Login' as never)}
         >

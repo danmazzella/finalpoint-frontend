@@ -111,15 +111,18 @@ export const authAPI = {
 };
 
 export const leaguesAPI = {
-  getLeagues: () => apiService.get('/leagues/get'),
   createLeague: (name: string) => apiService.post('/leagues/create', { name }),
-  getLeague: (id: number) => apiService.get(`/leagues/get/${id}`),
+  getLeagues: () => apiService.get('/leagues/get'),
+  getLeague: (leagueId: number) => apiService.get(`/leagues/get/${leagueId}`),
   joinLeague: (leagueId: number) => apiService.post(`/leagues/${leagueId}/join`),
   joinByCode: (joinCode: string) => apiService.post('/leagues/join-by-code', { joinCode }),
   getLeagueByCode: (joinCode: string) => apiService.get(`/leagues/code/${joinCode}`),
   getLeagueMembers: (leagueId: number) => apiService.get(`/leagues/${leagueId}/members`),
   getLeagueStandings: (leagueId: number) => apiService.get(`/leagues/${leagueId}/standings`),
   getLeagueStats: (leagueId: number) => apiService.get(`/leagues/${leagueId}/stats`),
+  updateLeague: (leagueId: number, name: string) => apiService.put(`/leagues/${leagueId}`, { name }),
+  deleteLeague: (leagueId: number) => apiService.delete(`/leagues/${leagueId}`),
+  leaveLeague: (leagueId: number) => apiService.post(`/leagues/${leagueId}/leave`),
 };
 
 export const picksAPI = {
