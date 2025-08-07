@@ -4,22 +4,27 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // Check for environment variable first
   if (process.env.NEXT_PUBLIC_API_URL) {
+    console.log('🔧 Using NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
   // Check if we're in production (deployed to finalpoint.app)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    console.log('🔧 Current hostname:', hostname);
     if (hostname === 'finalpoint.app' || hostname === 'www.finalpoint.app') {
+      console.log('🔧 Using production API URL');
       return 'https://api.finalpoint.app/api';
     }
   }
 
   // Fallback to development URL
+  console.log('🔧 Using development API URL');
   return 'http://192.168.0.15:6075/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
+console.log('🔧 Final API Base URL:', API_BASE_URL);
 
 export const apiService = axios.create({
   baseURL: API_BASE_URL,
@@ -39,6 +44,7 @@ apiService.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    console.log('🔧 Making request to:', config.url);
     return config;
   },
   (error) => {
@@ -50,6 +56,7 @@ apiService.interceptors.request.use(
 apiService.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.error('🔧 API Error:', error.response?.status, error.response?.data);
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -113,6 +120,17 @@ export interface User {
   id: number;
   email: string;
   name: string;
+}
+
+export interface SignupData {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
 }
 
 export interface League {
