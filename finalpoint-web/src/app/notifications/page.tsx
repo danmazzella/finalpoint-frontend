@@ -253,7 +253,7 @@ export default function NotificationsPage() {
                                             }`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.emailReminders ? 'translate-x-6' : 'translate-x-1'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.emailReminders ? 'translate-x-5' : 'translate-x-1'
                                                 }`}
                                         />
                                     </button>
@@ -272,7 +272,7 @@ export default function NotificationsPage() {
                                             }`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.emailScoreUpdates ? 'translate-x-6' : 'translate-x-1'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.emailScoreUpdates ? 'translate-x-5' : 'translate-x-1'
                                                 }`}
                                         />
                                     </button>
@@ -359,7 +359,7 @@ export default function NotificationsPage() {
                                             } ${(!pushSupported || pushPermission !== 'granted') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.pushReminders && pushPermission === 'granted' ? 'translate-x-6' : 'translate-x-1'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.pushReminders && pushPermission === 'granted' ? 'translate-x-5' : 'translate-x-1'
                                                 }`}
                                         />
                                     </button>
@@ -379,7 +379,7 @@ export default function NotificationsPage() {
                                             } ${(!pushSupported || pushPermission !== 'granted') ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.pushScoreUpdates && pushPermission === 'granted' ? 'translate-x-6' : 'translate-x-1'
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.pushScoreUpdates && pushPermission === 'granted' ? 'translate-x-5' : 'translate-x-1'
                                                 }`}
                                         />
                                     </button>
