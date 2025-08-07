@@ -358,7 +358,7 @@ export default function RaceResultsPage() {
                 </div>
 
                 {/* Multiple Position Notice */}
-                {requiredPositions.length > 1 && (
+                {requiredPositions.length > 1 && results.length > 0 && (
                     <div className="bg-white shadow rounded-lg p-6 mb-6">
                         <div className="mb-4">
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
