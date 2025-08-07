@@ -108,12 +108,29 @@ export default function NotificationsPage() {
 
             if (permission === 'granted') {
                 try {
-                    // Register service worker and get push subscription
-                    const registration = await navigator.serviceWorker.register('/sw.js');
-                    const subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+                    // Register service worker with proper scope
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/'
                     });
+                    
+                    console.log('Service worker registered:', registration);
+                    
+                    // Wait for service worker to be ready
+                    await navigator.serviceWorker.ready;
+                    
+                    // Check if already subscribed
+                    let subscription = await registration.pushManager.getSubscription();
+                    
+                    if (!subscription) {
+                        // Subscribe to push notifications
+                        subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+                        });
+                        console.log('Push subscription created:', subscription);
+                    } else {
+                        console.log('Existing push subscription found:', subscription);
+                    }
 
                     // Send subscription to server
                     await notificationsAPI.registerPushToken(
@@ -124,7 +141,8 @@ export default function NotificationsPage() {
                     setSuccess('Push notifications enabled successfully!');
                 } catch (subscriptionError) {
                     console.error('Error setting up push subscription:', subscriptionError);
-                    setError('Failed to set up push notifications. Please try again.');
+                    const errorMessage = subscriptionError instanceof Error ? subscriptionError.message : 'Unknown error';
+                    setError(`Failed to set up push notifications: ${errorMessage}`);
                 }
             } else if (permission === 'denied') {
                 const isFirefox = navigator.userAgent.includes('Firefox');
