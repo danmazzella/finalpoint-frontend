@@ -112,10 +112,29 @@ export default function DebugPushPage() {
 
         try {
             // Check if service worker is registered
-            const registrations = await navigator.serviceWorker.getRegistrations();
+            let registrations = await navigator.serviceWorker.getRegistrations();
+
             if (registrations.length === 0) {
-                setTestResult('❌ No service worker registered');
-                return;
+                setTestResult('📝 No service worker registered, attempting to register...');
+
+                // Try to register the service worker
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/'
+                    });
+                    setTestResult(prev => prev + '\n✅ Service worker registered successfully');
+
+                    // Wait for service worker to be ready
+                    await navigator.serviceWorker.ready;
+                    setTestResult(prev => prev + '\n✅ Service worker is ready');
+
+                    // Get updated registrations
+                    registrations = await navigator.serviceWorker.getRegistrations();
+                } catch (swError) {
+                    const errorMessage = swError instanceof Error ? swError.message : 'Unknown error';
+                    setTestResult(`❌ Failed to register service worker: ${errorMessage}`);
+                    return;
+                }
             }
 
             const registration = registrations[0];

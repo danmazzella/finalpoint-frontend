@@ -40,6 +40,20 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Service worker headers
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache',
+          },
+        ],
+      },
     ];
   },
 

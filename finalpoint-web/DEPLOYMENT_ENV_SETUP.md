@@ -12,7 +12,7 @@ Create the following files in your production environment:
 **`.env.local`** (for local development):
 ```env
 # API Configuration
-NEXT_PUBLIC_API_URL=https://api.finalpoint.app
+NEXT_PUBLIC_API_URL=https://api.finalpoint.app/api
 
 # Push Notifications
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BFs6Whd0ShkaO1rp6QZ3Y31KwxXDDrrkfRxtkoM_s9J2oWbJNe6zMY-vNPrnVOTrQ5XsS3bw5MUAIJKIEzU2rPY
@@ -21,7 +21,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=BFs6Whd0ShkaO1rp6QZ3Y31KwxXDDrrkfRxtkoM_s9J2oWbJNe6
 **`.env.production`** (for production builds):
 ```env
 # API Configuration
-NEXT_PUBLIC_API_URL=https://api.finalpoint.app
+NEXT_PUBLIC_API_URL=https://api.finalpoint.app/api
 
 # Push Notifications
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BFs6Whd0ShkaO1rp6QZ3Y31KwxXDDrrkfRxtkoM_s9J2oWbJNe6zMY-vNPrnVOTrQ5XsS3bw5MUAIJKIEzU2rPY

@@ -5,7 +5,13 @@ const getApiBaseUrl = () => {
   // Check for environment variable first
   if (process.env.NEXT_PUBLIC_API_URL) {
     console.log('🔧 Using NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-    return process.env.NEXT_PUBLIC_API_URL;
+    // Ensure the URL ends with /api if it doesn't already
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url.endsWith('/api')) {
+      console.log('🔧 Adding /api to URL');
+      return url.endsWith('/') ? url + 'api' : url + '/api';
+    }
+    return url;
   }
 
   // Check if we're in production (deployed to finalpoint.app)
