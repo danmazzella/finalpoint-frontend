@@ -56,12 +56,35 @@ apiService.interceptors.request.use(
 apiService.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.error('🔧 API Error:', error.response?.status, error.response?.data);
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    // More robust error logging
+    const errorInfo = {
+      message: error?.message || 'Unknown error',
+      code: error?.code || 'UNKNOWN',
+      status: error?.response?.status || 'No response',
+      statusText: error?.response?.statusText || 'No status text',
+      data: error?.response?.data || 'No data',
+      url: error?.config?.url || 'No URL',
+      method: error?.config?.method || 'No method',
+      isNetworkError: !error?.response,
+      isTimeout: error?.code === 'ECONNABORTED',
+      isCorsError: error?.message?.includes('CORS') || false
+    };
+
+    console.error('🔧 API Error Details:', errorInfo);
+
+    // Handle specific error types
+    if (errorInfo.isNetworkError) {
+      console.error('🔧 Network error - check if API is accessible');
+    } else if (errorInfo.isTimeout) {
+      console.error('🔧 Request timed out');
+    } else if (errorInfo.isCorsError) {
+      console.error('🔧 CORS error detected');
+    } else if (errorInfo.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
