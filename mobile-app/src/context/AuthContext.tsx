@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await apiService.post('/users/login', { email, password });
-      
+
       if (response.data.success) {
         const userData = response.data.user;
         setUser(userData);
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await apiService.post('/users/signup', { email, password, name });
-      
+
       if (response.data.success) {
         const userData = response.data.user;
         setUser(userData);
